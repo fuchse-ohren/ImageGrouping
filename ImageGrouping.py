@@ -1,5 +1,6 @@
 from PIL import Image,UnidentifiedImageError
 from tqdm import tqdm
+from sys import exit
 import re,os,math,argparse,imagehash,multiprocessing
 
 # ハッシュ生成
@@ -25,8 +26,8 @@ if __name__ == "__main__":
     args = parser.parse_args();
     threads = int(args.threads);
     similarity = int(args.similarity);
-    if not (0 <= threads <= 32) or not (0 <= similarity <= 100):
-        print("エラー: threadは0以上32以下、similarityは0以上100以下である必要があります。");
+    if not (1 <= threads <= 32) or not (0 <= similarity <= 100):
+        print("エラー: threadは1以上32以下、similarityは0以上100以下である必要があります。");
         exit(1);
 
     # ファイル一覧を取得

@@ -19,15 +19,26 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
 
     # 引数を拾う
-    parser = argparse.ArgumentParser(description='フォルダ内から似た画像を探して自動でフォルダ分けを行うプログラムです。');
+    parser = argparse.ArgumentParser(description='フォルダ内から似た画像を探して自動でフォルダ分けを行うプログラムです。',formatter_class=argparse.RawTextHelpFormatter);
     parser.add_argument('-t', '--threads', default=8, help="処理を行う際のスレッド数を指定します。(規定値=8)");
     parser.add_argument('-s', '--similarity', default=10, help="画像を同一と判定する閾値を指定します。値が低いほど厳密に比較します。(規定値=10)");
+    parser.add_argument('-m','--mode',default='folder',help=" \n \
+    動作モードを指定します。\n \
+    test\t・・・\tグループ分けの結果のみ表示\n \
+    move\t・・・\tグループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
+    copy\t・・・\t未実装の機能です。グループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
+    link\t・・・・\tグループごとにフォルダを作成し、フォルダ内にシンボリックリンクを作成します\
+    ");
 
+    # 引数の取り出しとチェック
     args = parser.parse_args();
     threads = int(args.threads);
     similarity = int(args.similarity);
     if not (1 <= threads <= 32) or not (0 <= similarity <= 100):
         print("エラー: threadは1以上32以下、similarityは0以上100以下である必要があります。");
+        exit(1);
+    if not args.mode in ['test','move','copy','link']:
+        print("エラー: modeは「test」「move」「copy」「link」である必要があります。");
         exit(1);
 
     # ファイル一覧を取得
@@ -71,7 +82,9 @@ if __name__ == "__main__":
 
     # フォルダ分け
     offset = 0;
-    for i in tqdm(range(len(groups)),bar_format='{l_bar}{bar:50}{r_bar}{bar:-10b}', desc="ファイル移動中"):
+    output = "";
+    for i in tqdm(range(len(groups)),bar_format='{l_bar}{bar:50}{r_bar}{bar:-10b}', desc="仕分処理中"):
+        
         while True:
             dirname = "g"+str(i+offset).zfill(8);
             try:
@@ -82,8 +95,26 @@ if __name__ == "__main__":
             else :
                 break;
 
+        dirname = "g"+str(i+offset).zfill(8);
         for src in groups[i]:
             dst = dirname + '/' + src;
-            os.rename(src,dst);
-    print();
+            
+            if args.mode == 'test':
+                output += "%s:\t%s\n"%(dirname,src);
+            elif args.mode == 'move':
+                os.rename(src,dst);
+            elif args.mode == 'copy':
+                print("未実装");
+                exit(1);
+            elif args.mode == 'link':
+                os.symlink('..\\'+src,dst);
+            
+        
+        # 後処理
+        
+        # テストモードの時作成したフォルダを削除する
+        if args.mode == 'test':
+            os.removedirs(dirname);
+            
+    print(output);
     print('完了');

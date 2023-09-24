@@ -3,6 +3,6 @@ import py2exe, os, sys
  
 setup(
 options = {'py2exe': {'bundle_files': 1, 'compressed': True}},
-console = [{'script': 'C:\\\\Users\\admin\\Desktop\\ImageGrouping\\ImageGrouping.py'}],
+console = [{'script': 'ImageGrouping.py'}],
 zipfile = None,
 )

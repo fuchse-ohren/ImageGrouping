@@ -1,7 +1,7 @@
 from PIL import Image,UnidentifiedImageError
 from tqdm import tqdm
 from sys import exit
-import re,os,math,argparse,imagehash,multiprocessing
+import re,os,time,math,argparse,imagehash,multiprocessing
 
 # ハッシュ生成
 def hash_gen(file):
@@ -14,6 +14,33 @@ def hash_gen(file):
         else:
             return {"name":file,"hash":hash};
 
+def reset():
+    regex_folder = r'g\d{8}';
+    dir = [];
+    fail = [];
+
+    for i in tqdm(os.listdir(),bar_format='{l_bar}{bar:50}{r_bar}{bar:-10b}', desc="フォルダ検出中"):
+        if os.path.isdir(i) and re.match(regex_folder,i):
+            dir.append(i);
+    
+    for d in tqdm(dir,bar_format='{l_bar}{bar:50}{r_bar}{bar:-10b}', desc="ファイル移動中"):
+        files = os.listdir(d);
+        for f in files:
+            try:
+                os.rename(d+"/"+f,f);
+            except:
+                pass;
+    
+    for d in tqdm(dir,bar_format='{l_bar}{bar:50}{r_bar}{bar:-10b}', desc="フォルダ削除中"):
+        try:
+            os.rmdir(d); #rmdirを使うと空のディレクトリだけ消せる
+        except:
+            fail.append(d);
+    
+    for f in fail:
+        print("次のフォルダが削除できませんでした: %s"%(f));
+    exit(1);
+
 if __name__ == "__main__":
     # Windows
     multiprocessing.freeze_support()
@@ -22,12 +49,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='フォルダ内から似た画像を探して自動でフォルダ分けを行うプログラムです。',formatter_class=argparse.RawTextHelpFormatter);
     parser.add_argument('-t', '--threads', default=8, help="処理を行う際のスレッド数を指定します。(規定値=8)");
     parser.add_argument('-s', '--similarity', default=10, help="画像を同一と判定する閾値を指定します。値が低いほど厳密に比較します。(規定値=10)");
-    parser.add_argument('-m','--mode',default='folder',help=" \n \
+    parser.add_argument('-m','--mode',default='move',help=" \n \
     動作モードを指定します。\n \
     test\t・・・\tグループ分けの結果のみ表示\n \
     move\t・・・\tグループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
     copy\t・・・\t未実装の機能です。グループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
-    link\t・・・・\tグループごとにフォルダを作成し、フォルダ内にシンボリックリンクを作成します\
+    link\t・・・\tグループごとにフォルダを作成し、フォルダ内にシンボリックリンクを作成します \n \
+    reset\t・・・\tグルーピングされたフォルダを元に戻します\n \
     ");
 
     # 引数の取り出しとチェック
@@ -37,9 +65,13 @@ if __name__ == "__main__":
     if not (1 <= threads <= 32) or not (0 <= similarity <= 100):
         print("エラー: threadは1以上32以下、similarityは0以上100以下である必要があります。");
         exit(1);
-    if not args.mode in ['test','move','copy','link']:
-        print("エラー: modeは「test」「move」「copy」「link」である必要があります。");
+    if not args.mode in ['test','move','copy','link','reset']:
+        print("エラー: modeは「test」「move」「copy」「link」「reset」である必要があります。");
         exit(1);
+
+    # resetの場合
+    if args.mode == 'reset':
+        reset();
 
     # ファイル一覧を取得
     files = os.listdir();
@@ -114,7 +146,7 @@ if __name__ == "__main__":
         
         # テストモードの時作成したフォルダを削除する
         if args.mode == 'test':
-            os.removedirs(dirname);
+            os.rmdir(dirname);
             
     print(output);
     print('完了');

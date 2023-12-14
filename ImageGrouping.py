@@ -1,4 +1,4 @@
-from PIL import Image,UnidentifiedImageError
+from PIL import Image,ImageFile,UnidentifiedImageError
 from tqdm import tqdm
 from sys import exit
 import re,os,time,math,argparse,imagehash,multiprocessing
@@ -42,7 +42,10 @@ def reset():
     exit(1);
 
 if __name__ == "__main__":
-    # Windows
+    # 大きいサイズの画像を読み込むためのフラグ
+    ImageFile.LOAD_TRUNCATED_IMAGES = True;
+
+    # for Windows
     multiprocessing.freeze_support()
 
     # 引数を拾う

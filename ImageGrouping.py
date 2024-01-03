@@ -56,6 +56,7 @@ if __name__ == "__main__":
     動作モードを指定します。\n \
     test\t・・・\tグループ分けの結果のみ表示\n \
     move\t・・・\tグループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
+    rename\t・・・\tグループ名を接頭辞として利用しファイル名を変更します \
     copy\t・・・\t未実装の機能です。グループごとにフォルダを作成し、ファイルを移動します(規定値)\n \
     link\t・・・\tグループごとにフォルダを作成し、フォルダ内にシンボリックリンクを作成します \n \
     reset\t・・・\tグルーピングされたフォルダを元に戻します\n \
@@ -68,8 +69,8 @@ if __name__ == "__main__":
     if not (1 <= threads <= 32) or not (0 <= similarity <= 100):
         print("エラー: threadは1以上32以下、similarityは0以上100以下である必要があります。");
         exit(1);
-    if not args.mode in ['test','move','copy','link','reset']:
-        print("エラー: modeは「test」「move」「copy」「link」「reset」である必要があります。");
+    if not args.mode in ['test','move','rename','copy','link','reset']:
+        print("エラー: modeは「test」「move」「rename」「copy」「link」「reset」である必要があります。");
         exit(1);
 
     # resetの場合
@@ -143,12 +144,14 @@ if __name__ == "__main__":
                 exit(1);
             elif args.mode == 'link':
                 os.symlink('..\\'+src,dst);
+            elif args.mode == 'rename':
+                os.rename(src,dirname + '_' + src);
             
         
         # 後処理
         
         # テストモードの時作成したフォルダを削除する
-        if args.mode == 'test':
+        if args.mode == 'test' or args.mode == 'rename':
             os.rmdir(dirname);
             
     print(output);
